@@ -13,6 +13,10 @@ const findUserByUsername = (username) => {
   const user = users.find((user) => user.username === username)
   return user
 }
+const findTodoById = (todos, id) => {
+  const todo = todos.find((todo) => todo.id === id)
+  return todo
+}
 
 function checksExistsUserAccount(request, response, next) {
   const { username } = request.headers
@@ -31,7 +35,7 @@ app.post('/users', (request, response) => {
 
   const user = findUserByUsername(username)
   if(user) return response.status(400).json({ user: 'user already exists!' })
-  
+
   const newUser = {
     id: uuidV4(),
     name,
@@ -63,11 +67,20 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
   }
   user.todos.push(newTodo)
   return response.status(201).json(newTodo)
-  // Complete aqui
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+    const { user } = request
+    const { id } = request.params
+    const { title, deadline } = request.body
+
+    if(!id) return response.status(400).json({ error: 'id must be provided!'})
+
+    const todo = findTodoById(user.todos, id)
+    if(!todo) return response.status(404).json({ error: 'todo not found!'})
+    todo.title = title
+    todo.deadline = deadline
+    response.json({ todo })
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
