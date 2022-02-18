@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidV4 } = require('uuid');
+const http = require('./http')
 
 const app = express();
 
@@ -9,20 +10,7 @@ app.use(express.json());
 
 const users = [];
 
-const http = {
-  badRequest(response, error){
-    return response.status(400).json({ error })
-  },
-  notFound(response, error){
-    return response.status(404).json({ error })
-  },
-  ok(response, body){
-    return response.status(200).json(body)
-  },
-  noContent(response){
-    return response.status(204).send()
-  }
-}
+
 
 const findUserByUsername = (username) => {
   const user = users.find((user) => user.username === username)
