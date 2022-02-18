@@ -1,4 +1,4 @@
-export default http = {
+module.exports = {
   badRequest(response, error){
     return response.status(400).json({ error })
   },
