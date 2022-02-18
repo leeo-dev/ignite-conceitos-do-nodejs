@@ -9,10 +9,26 @@ app.use(express.json());
 
 const users = [];
 
+const http = {
+  badRequest(response, error){
+    return response.status(400).json({ error })
+  },
+  notFound(response, error){
+    return response.status(404).json({ error })
+  },
+  ok(response, body){
+    return response.status(200).json(body)
+  },
+  noContent(response){
+    return response.status(204).send()
+  }
+}
+
 const findUserByUsername = (username) => {
   const user = users.find((user) => user.username === username)
   return user
 }
+
 const findTodoById = (todos, id) => {
   const todo = todos.find((todo) => todo.id === id)
   return todo
@@ -20,9 +36,11 @@ const findTodoById = (todos, id) => {
 
 function checksExistsUserAccount(request, response, next) {
   const { username } = request.headers
-  if(!username) return response.status(400).json({error: 'username must be provided'})
+  if(!username) return http.badRequest(response, 'username must be provided')
+
   const user = findUserByUsername(username)
-  if(!user) response.status(400).json({error: 'user not found!'})
+  if(!user) return http.badRequest(response, 'user not found!')
+
   request.user = user
   next()
 }
@@ -30,11 +48,12 @@ function checksExistsUserAccount(request, response, next) {
 app.post('/users', (request, response) => {
   const { name, username } = request.body
 
-  if(!name) return response.status(400).json({error: 'name must be provided'})
-  if(!username) return response.status(400).json({error: 'username must be provided'})
+  if(!name) return http.badRequest(response, 'name must be provided')
+  if(!username) return http.badRequest(response, 'username must be provided')
 
   const user = findUserByUsername(username)
-  if(user) return response.status(400).json({ user: 'user already exists!' })
+  
+  if(user) return http.badRequest(response, 'user already exists!')
 
   const newUser = {
     id: uuidV4(),
@@ -43,20 +62,20 @@ app.post('/users', (request, response) => {
     todos: []
   }
   users.push(newUser)
-  return response.status(200).json({ user: newUser })
+  return http.ok(response, { user: newUser })
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request
-  response.json({ todos: user.todos })
+  return http.ok(response, { todos: user.todos })
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request
   const { title, deadline} = request.body
 
-  if(!title) return response.status(400).json({ error: 'Title must provided' })
-  if(!deadline) return response.status(400).json({ error: 'Deadline must provided' })
+  if(!title) return http.badRequest(response, 'title must provided')
+  if(!deadline) return http.badRequest(response, 'deadline must provided')
 
   const newTodo = {
     id: uuidV4(),
@@ -66,7 +85,7 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
     created_at: new Date()
   }
   user.todos.push(newTodo)
-  return response.status(201).json(newTodo)
+  return http.ok(response, { newTodo })
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
@@ -74,44 +93,41 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
     const { id } = request.params
     const { title, deadline } = request.body
 
-    if(!id) return response.status(400).json({ error: 'id must be provided!'})
+    if(!id) return http.badRequest(response, 'id must be provided!')
 
     const todo = findTodoById(user.todos, id)
-    if(!todo) return response.status(404).json({ error: 'todo not found!'})
+    if(!todo) return http.notFound(response, 'todo not found!')
 
     todo.title = title
     todo.deadline = new Date(deadline)
 
-    response.status(200).json({ todo })
+    return http.ok(response, { todo })
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
     const { user } = request
     const { id } = request.params
 
-    if(!id) return response.status(400).json({ error: 'id must be provided!'})
+    if(!id) return http.badRequest(response, 'id must be provided!')
 
     const todo = findTodoById(user.todos, id)
-    if(!todo) return response.status(404).json({ error: 'todo not found!'})
+    if(!todo) return http.notFound(response, 'todo not found!')
+    
     todo.done = true
-    return response.status(200).json({ todo })
+    return http.ok(response, { todo })
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
       const { user } = request
     const { id } = request.params
 
-    if(!id) return response.status(400).json({ error: 'id must be provided!'})
+    if(!id) return http.badRequest(response, 'id must be provided!')
 
     const todoIndex = user.todos.findIndex(todo => todo.id === id)
-    if(todoIndex < 0) return response.status(404).json({ error: 'todo not found!'})
+    if(todoIndex < 0) return http.notFound(response, 'todo not found!')
 
     user.todos.splice(todoIndex, 1)
-
-    console.log(user.todos)
-
-
-    return response.status(204).send()
+    return http.noContent()
 });
 
 module.exports = app;
