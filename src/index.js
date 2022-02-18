@@ -12,7 +12,6 @@ const users = [];
 function checksExistsUserAccount(request, response, next) {
   const { username } = request.headers
   if(!username) return response.status(400).json({error: 'Username must be provided'})
-  console.log(username)
   const user = users.find((user) => user.username === username)
   if(!user) response.status(400).json({error: 'user not found!'})
   request.user = user
@@ -33,10 +32,24 @@ app.post('/users', (request, response) => {
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request
-  response.json({ user })
+  response.json({ todos: user.todos })
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
+  const { user } = request
+  const { title, deadline} = request.body
+  if(!title) return response.status(400).json({ error: 'Title must provided' })
+  if(!deadline) return response.status(400).json({ error: 'Deadline must provided' })
+
+  const newTodo = {
+    id: uuidV4(),
+    title,
+    done: false,
+    deadline: new Date(deadline),
+    created_at: new Date()
+  }
+  user.todos.push(newTodo)
+  return response.status(201).json(newTodo)
   // Complete aqui
 });
 
