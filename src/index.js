@@ -9,10 +9,15 @@ app.use(express.json());
 
 const users = [];
 
+const findUserByUsername = (username) => {
+  const user = users.find((user) => user.username === username)
+  return user
+}
+
 function checksExistsUserAccount(request, response, next) {
   const { username } = request.headers
-  if(!username) return response.status(400).json({error: 'Username must be provided'})
-  const user = users.find((user) => user.username === username)
+  if(!username) return response.status(400).json({error: 'username must be provided'})
+  const user = findUserByUsername(username)
   if(!user) response.status(400).json({error: 'user not found!'})
   request.user = user
   next()
@@ -20,6 +25,13 @@ function checksExistsUserAccount(request, response, next) {
 
 app.post('/users', (request, response) => {
   const { name, username } = request.body
+
+  if(!name) return response.status(400).json({error: 'name must be provided'})
+  if(!username) return response.status(400).json({error: 'username must be provided'})
+
+  const user = findUserByUsername(username)
+  if(user) return response.status(400).json({ user: 'user already exists!' })
+  
   const newUser = {
     id: uuidV4(),
     name,
@@ -38,6 +50,7 @@ app.get('/todos', checksExistsUserAccount, (request, response) => {
 app.post('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request
   const { title, deadline} = request.body
+
   if(!title) return response.status(400).json({ error: 'Title must provided' })
   if(!deadline) return response.status(400).json({ error: 'Deadline must provided' })
 
