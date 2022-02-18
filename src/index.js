@@ -78,17 +78,40 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 
     const todo = findTodoById(user.todos, id)
     if(!todo) return response.status(404).json({ error: 'todo not found!'})
+
     todo.title = title
-    todo.deadline = deadline
-    response.json({ todo })
+    todo.deadline = new Date(deadline)
+
+    response.status(200).json({ todo })
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+    const { user } = request
+    const { id } = request.params
+
+    if(!id) return response.status(400).json({ error: 'id must be provided!'})
+
+    const todo = findTodoById(user.todos, id)
+    if(!todo) return response.status(404).json({ error: 'todo not found!'})
+    todo.done = true
+    return response.status(200).json({ todo })
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {
-  // Complete aqui
+      const { user } = request
+    const { id } = request.params
+
+    if(!id) return response.status(400).json({ error: 'id must be provided!'})
+
+    const todoIndex = user.todos.findIndex(todo => todo.id === id)
+    if(todoIndex < 0) return response.status(404).json({ error: 'todo not found!'})
+
+    user.todos.splice(todoIndex, 1)
+
+    console.log(user.todos)
+
+
+    return response.status(204).send()
 });
 
 module.exports = app;
