@@ -10,8 +10,6 @@ app.use(express.json());
 
 const users = [];
 
-
-
 const findUserByUsername = (username) => {
   const user = users.find((user) => user.username === username)
   return user
@@ -50,12 +48,12 @@ app.post('/users', (request, response) => {
     todos: []
   }
   users.push(newUser)
-  return http.ok(response, { user: newUser })
+  return http.created(response, { ...newUser })
 });
 
 app.get('/todos', checksExistsUserAccount, (request, response) => {
   const { user } = request
-  return http.ok(response, { todos: user.todos })
+  return http.ok(response, user.todos)
 });
 
 app.post('/todos', checksExistsUserAccount, (request, response) => {
@@ -65,15 +63,14 @@ app.post('/todos', checksExistsUserAccount, (request, response) => {
   if(!title) return http.badRequest(response, 'title must provided')
   if(!deadline) return http.badRequest(response, 'deadline must provided')
 
-  const newTodo = {
+  user.todos.push({
     id: uuidV4(),
     title,
     done: false,
     deadline: new Date(deadline),
     created_at: new Date()
-  }
-  user.todos.push(newTodo)
-  return http.ok(response, { newTodo })
+  })
+  return http.created(response, user.todos[user.todos.length - 1])
 });
 
 app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
@@ -88,8 +85,8 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 
     todo.title = title
     todo.deadline = new Date(deadline)
-
-    return http.ok(response, { todo })
+    console.log(todo)
+    return http.ok(response, todo)
 });
 
 app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
@@ -102,7 +99,7 @@ app.patch('/todos/:id/done', checksExistsUserAccount, (request, response) => {
     if(!todo) return http.notFound(response, 'todo not found!')
     
     todo.done = true
-    return http.ok(response, { todo })
+    return http.ok(response, todo )
 });
 
 app.delete('/todos/:id', checksExistsUserAccount, (request, response) => {

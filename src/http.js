@@ -10,5 +10,8 @@ module.exports = {
   },
   noContent(response){
     return response.status(204).send()
+  },
+  created(response, body){
+    return response.status(201).send(body)
   }
 }

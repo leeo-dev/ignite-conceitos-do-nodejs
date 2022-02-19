@@ -1,7 +1,7 @@
 const request = require('supertest');
 const { validate } = require('uuid');
 
-const app = require('../');
+const app = require('..');
 
 describe('Todos', () => {
   it("should be able to list all user's todo", async () => {
@@ -32,7 +32,6 @@ describe('Todos', () => {
       ]),
     )
   });
-
   it('should be able to create a new todo', async () => {
     const userResponse = await request(app)
       .post('/users')
@@ -60,7 +59,6 @@ describe('Todos', () => {
     expect(validate(response.body.id)).toBe(true);
     expect(response.body.created_at).toBeTruthy();
   });
-
   it('should be able to update a todo', async () => {
     const userResponse = await request(app)
       .post('/users')
@@ -107,7 +105,6 @@ describe('Todos', () => {
       done: false
     });
   });
-
   it('should not be able to update a non existing todo', async () => {
     const userResponse = await request(app)
       .post('/users')
@@ -129,7 +126,6 @@ describe('Todos', () => {
 
     expect(response.body.error).toBeTruthy();
   });
-
   it('should be able to mark a todo as done', async () => {
     const userResponse = await request(app)
       .post('/users')
