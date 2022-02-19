@@ -85,7 +85,6 @@ app.put('/todos/:id', checksExistsUserAccount, (request, response) => {
 
     todo.title = title
     todo.deadline = new Date(deadline)
-    console.log(todo)
     return http.ok(response, todo)
 });
 
